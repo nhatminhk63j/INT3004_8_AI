@@ -116,7 +116,61 @@ def depthFirstSearch(problem):
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # init start node.
+    start_node = problem.getStartState()
+
+    # roadState will store (node, action). roadState as linkedlist store way's agent.
+    # roadState has structure { node : (next_node, action), ...}
+    roadState = {}
+
+    # init roadState with start node.
+    roadState[start_node] = (None, None)
+
+    # queue will be store nodes that agent can be moved.
+    queue = util.Queue()
+
+    # init queue with start node.
+    queue.push(start_node)
+
+    # define goal state.
+    goal_node = None
+
+    while not queue.isEmpty():
+        # get top node from queue.
+        top_node = queue.pop()
+
+        # if top node is goal state, exit loop queue.
+        if (problem.isGoalState(top_node)):
+            goal_node = top_node
+            break
+
+        # try in any case can go.
+        for next_node, action, cost in problem.getSuccessors(top_node):
+            # if next node in roadState (visited), do not store to roadState.
+            if next_node in roadState:
+                continue
+            roadState[next_node] = (top_node, action)
+            queue.push(next_node)
+    
+    # if has not goal state return None.
+    if goal_node is None:
+        return None
+
+    current_node = goal_node
+    actions = []
+
+    # loop roadState from goal state to get actions.
+    while True:
+        previous_node, action = roadState[current_node]
+        if previous_node is None:
+            break
+        actions = actions + [action]
+        current_node = previous_node
+
+    # because we get way from goal state to start state, we will return array reverse of actions.
+    actions.reverse()
+
+    return actions
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
