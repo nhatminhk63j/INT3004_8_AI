@@ -210,7 +210,6 @@ def aStarSearch(problem, heuristic=nullHeuristic):
 
     while not priority_queue.isEmpty():
         top_node, current_cost = priority_queue.pop()
-        print "top_node: ", top_node, " current_cost: ", current_cost
 
         if (cost_from_start[top_node] != current_cost):
             continue
