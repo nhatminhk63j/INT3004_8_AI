@@ -119,12 +119,12 @@ def breadthFirstSearch(problem):
     # init start node.
     start_node = problem.getStartState()
 
-    # roadState will store (node, action). roadState as linkedlist store way's agent.
-    # roadState has structure { node : (next_node, action), ...}
-    roadState = {}
+    # road_state will store (node, action). road_state as linkedlist store way's agent.
+    # road_state has structure { node : (next_node, action), ...}
+    road_state = {}
 
-    # init roadState with start node.
-    roadState[start_node] = (None, None)
+    # init road_state with start node.
+    road_state[start_node] = (None, None)
 
     # queue will be store nodes that agent can be moved.
     queue = util.Queue()
@@ -146,10 +146,10 @@ def breadthFirstSearch(problem):
 
         # try in any case can go.
         for next_node, action, cost in problem.getSuccessors(top_node):
-            # if next node in roadState (visited), do not store to roadState.
-            if next_node in roadState:
+            # if next node in road_state (visited), do not store to road_state.
+            if next_node in road_state:
                 continue
-            roadState[next_node] = (top_node, action)
+            road_state[next_node] = (top_node, action)
             queue.push(next_node)
     
     # if has not goal state return None.
@@ -159,9 +159,9 @@ def breadthFirstSearch(problem):
     current_node = goal_node
     actions = []
 
-    # loop roadState from goal state to get actions.
+    # loop road_state from goal state to get actions.
     while True:
-        previous_node, action = roadState[current_node]
+        previous_node, action = road_state[current_node]
         if previous_node is None:
             break
         actions = actions + [action]
@@ -175,7 +175,10 @@ def breadthFirstSearch(problem):
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # uniform cost search is A* search with heuristic = 0.
+    # using priority queue.
+    
+    return aStarSearch(problem)
 
 def nullHeuristic(state, problem=None):
     """
@@ -187,7 +190,61 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # init start node.
+    start_node = problem.getStartState()
+    # road_state will store (node, action). road_state as linkedlist store way's agent.
+    # road_state has structure { node : (next_node, action), ...}
+    road_state = {}
+    # cost_from_start store (node, cost)
+    cost_from_start = {}
+    # init road_state by start_node.
+    road_state[start_node] = (None, None)
+    # define priority_queue will be store (node, cost), sort by heuristic_cost
+    priority_queue = util.PriorityQueue()
+
+    cost_from_start[start_node] = 0
+
+    priority_queue.push((start_node, 0), 0)
+
+    goal_node = None
+
+    while not priority_queue.isEmpty():
+        top_node, current_cost = priority_queue.pop()
+        print "top_node: ", top_node, " current_cost: ", current_cost
+
+        if (cost_from_start[top_node] != current_cost):
+            continue
+
+        if (problem.isGoalState(top_node)):
+            goal_node = top_node
+            break
+        for next_node, action, cost in problem.getSuccessors(top_node):
+            new_cost = current_cost + cost
+            if next_node in road_state:
+                if (cost_from_start[next_node] <= new_cost):
+                    continue
+            
+            road_state[next_node] = (top_node, action)
+            cost_from_start[next_node] = new_cost
+            heuristic_cost = new_cost + heuristic(next_node, problem)
+            priority_queue.push((next_node, new_cost), heuristic_cost)
+    
+    if goal_node is None:
+        return None
+    
+    current_node = goal_node
+    actions = []
+
+    # loop road_state from goal state to get actions.
+    while True:
+        previous_node, action = road_state[current_node]
+        if previous_node is None:
+            break
+        actions = actions + [action]
+        current_node = previous_node
+    
+    actions.reverse()
+    return actions
 
 
 # Abbreviations
