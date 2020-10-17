@@ -131,10 +131,7 @@ class MultiAgentSearchAgent(Agent):
         self.depth = int(depth)
 
 class MinimaxBase(MultiAgentSearchAgent):
-    def is_end_state(self, gameState, depth):
-        return depth == self.depth or gameState.isWin() or gameState.isLose()
-
-    def minValue(self, gameState, depth, agentCounter):
+    def min_value(self, gameState, depth, agentCounter, **kwargs):
         result = ["", INF]
         ghostActions = gameState.getLegalActions(agentCounter)
 
@@ -143,7 +140,7 @@ class MinimaxBase(MultiAgentSearchAgent):
 
         for action in ghostActions:
             currentState = gameState.generateSuccessor(agentCounter, action)
-            currentScore = self.calcMinimax(currentState, depth, agentCounter + 1)
+            currentScore = self.solve(currentState, depth, agentCounter + 1, **kwargs)
             if isinstance(currentScore, float):
                 score = currentScore
             else:
@@ -152,7 +149,7 @@ class MinimaxBase(MultiAgentSearchAgent):
                 result = [action, score]
         return result
 
-    def maxValue(self, gameState, depth, agentCounter):
+    def max_value(self, gameState, depth, agentCounter, **kwargs):
         result = ["", -INF]
         actions = gameState.getLegalActions(agentCounter)
 
@@ -160,25 +157,34 @@ class MinimaxBase(MultiAgentSearchAgent):
             return self.evaluationFunction(gameState)
         for action in actions:
             currentState = gameState.generateSuccessor(agentCounter, action)
-            currentScore = self.calcMinimax(currentState, depth, agentCounter + 1)
+            currentScore = self.solve(currentState, depth, agentCounter + 1, **kwargs)
             if isinstance(currentScore, float):
                 score = currentScore
             else:
                 score = currentScore[1]
-            if score > result[1]:
+            if score > result[1] or (score == result[1] and result[0] == 'Stop'):
                 result = [action, score]
         return result
 
-    def calcMinimax(self, gameState, depth, agentCounter):
+    def isEndState(self, gameState, depth):
+        return depth == self.depth or gameState.isWin() or gameState.isLose()
+
+    def solve(self, gameState, depth, agentCounter, pacmanFunction, ghostFunction, **kwargs):
         if agentCounter == gameState.getNumAgents():
             depth += 1
             agentCounter = 0
 
-        if (self.is_end_state(gameState, depth)):
+        if (self.isEndState(gameState, depth)):
             return self.evaluationFunction(gameState)
         if (agentCounter == 0):
-            return self.maxValue(gameState, depth, agentCounter)
-        return self.minValue(gameState, depth, agentCounter)
+            return pacmanFunction(gameState, depth, agentCounter,
+                                   pacmanFunction=pacmanFunction,
+                                   ghostFunction=ghostFunction,
+                                   **kwargs)
+        return ghostFunction(gameState, depth, agentCounter,
+                              pacmanFunction=pacmanFunction,
+                              ghostFunction=ghostFunction,
+                              **kwargs)
 
 class MinimaxAgent(MinimaxBase):
     """
@@ -204,7 +210,9 @@ class MinimaxAgent(MinimaxBase):
         """
         "*** YOUR CODE HERE ***"
         
-        actions = self.calcMinimax(gameState, 0, 0)
+        actions = self.solve(gameState, 0, 0,
+                             pacmanFunction=self.max_value,
+                             ghostFunction=self.min_value)
         return actions[0]
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
@@ -216,9 +224,9 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
           Returns the minimax action using self.depth and self.evaluationFunction
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
 
+              
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
       Your expectimax agent (question 4)
