@@ -276,10 +276,30 @@ class AlphaBetaAgent(MinimaxBase):
                              ghostFunction=self.minValueAb)
         return actions[0]
               
-class ExpectimaxAgent(MultiAgentSearchAgent):
+class ExpectimaxAgent(MinimaxBase):
     """
       Your expectimax agent (question 4)
     """
+    def expectiValue(self, gameState, depth, agentCounter, **kwargs):
+        ghostActions = gameState.getLegalActions(agentCounter)
+
+        if not ghostActions:
+            return self.evaluationFunction(gameState)
+
+        result = ['', 0]
+        numberOfActions = len(ghostActions)
+        probabilities = 1.0 / numberOfActions
+
+        for action in ghostActions:
+            currentState = gameState.generateSuccessor(agentCounter, action)
+            currentScore = self.solve(currentState, depth, agentCounter + 1, **kwargs)
+            if isinstance(currentScore, float):
+                score = currentScore
+            else:
+                score = currentScore[1]
+            result[1] += probabilities * score
+        result[0] = ghostActions[random.randint(0, numberOfActions - 1)]
+        return result
 
     def getAction(self, gameState):
         """
@@ -289,7 +309,10 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        actions = self.solve(gameState, 0, 0,
+                             pacmanFunction=self.maxValue,
+                             ghostFunction=self.expectiValue)
+        return actions[0]
 
 def betterEvaluationFunction(currentGameState):
     """
