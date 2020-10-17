@@ -131,7 +131,7 @@ class MultiAgentSearchAgent(Agent):
         self.depth = int(depth)
 
 class MinimaxBase(MultiAgentSearchAgent):
-    def min_value(self, gameState, depth, agentCounter, **kwargs):
+    def minValue(self, gameState, depth, agentCounter, **kwargs):
         result = ["", INF]
         ghostActions = gameState.getLegalActions(agentCounter)
 
@@ -149,7 +149,7 @@ class MinimaxBase(MultiAgentSearchAgent):
                 result = [action, score]
         return result
 
-    def max_value(self, gameState, depth, agentCounter, **kwargs):
+    def maxValue(self, gameState, depth, agentCounter, **kwargs):
         result = ["", -INF]
         actions = gameState.getLegalActions(agentCounter)
 
@@ -211,21 +211,70 @@ class MinimaxAgent(MinimaxBase):
         "*** YOUR CODE HERE ***"
         
         actions = self.solve(gameState, 0, 0,
-                             pacmanFunction=self.max_value,
-                             ghostFunction=self.min_value)
+                             pacmanFunction=self.maxValue,
+                             ghostFunction=self.minValue)
         return actions[0]
 
-class AlphaBetaAgent(MultiAgentSearchAgent):
+class AlphaBetaAgent(MinimaxBase):
     """
       Your minimax agent with alpha-beta pruning (question 3)
     """
+    def minValueAb(self, gameState, depth, agentCounter, alpha, beta, **kwargs):
+        result = ["", INF]
+        ghostActions = gameState.getLegalActions(agentCounter)
+
+        if not ghostActions:
+            return self.evaluationFunction(gameState)
+
+        for action in ghostActions:
+            currentState = gameState.generateSuccessor(agentCounter, action)
+            currentScore = self.solve(currentState, depth, agentCounter + 1,
+                                       alpha=alpha, beta=beta, **kwargs)
+
+            if isinstance(currentScore, float):
+                score = currentScore
+            else:
+                score = currentScore[1]
+
+            if score < result[1]:
+                result = [action, score]
+            if score < alpha:
+                return [action, score]
+            beta = min(beta, score)
+        return result
+
+    def maxValueAb(self, gameState, depth, agentCounter, alpha, beta, **kwargs):
+        result = ["", -INF]
+        actions = gameState.getLegalActions(agentCounter)
+
+        if not actions:
+            return self.evaluationFunction(gameState)
+
+        for action in actions:
+            currentState = gameState.generateSuccessor(agentCounter, action)
+            currentScore = self.solve(currentState, depth, agentCounter + 1,
+                                       alpha=alpha, beta=beta, **kwargs)
+
+            if isinstance(currentScore, float):
+                score = currentScore
+            else:
+                score = currentScore[1]
+
+            if score > result[1]:
+                result = [action, score]
+            if score > beta:
+                return [action, score]
+            alpha = max(alpha, score)
+        return result
 
     def getAction(self, gameState):
         """
           Returns the minimax action using self.depth and self.evaluationFunction
         """
-        
-
+        actions = self.solve(gameState, 0, 0, alpha=-INF, beta=INF,
+                             pacmanFunction=self.maxValueAb,
+                             ghostFunction=self.minValueAb)
+        return actions[0]
               
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
