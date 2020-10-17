@@ -18,6 +18,9 @@ import random, util
 
 from game import Agent
 
+SAFE_DISTANCE_TO_GHOST = 2
+INF = float("INF")
+
 class ReflexAgent(Agent):
     """
       A reflex agent chooses an action at each choice point by examining
@@ -74,7 +77,28 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        scaredTime = min(newScaredTimes)
+
+        nearestGhost = min([manhattanDistance(newPos, ghost.getPosition()) for ghost in newGhostStates])
+
+        if nearestGhost:
+          ghostScore = 10 / nearestGhost
+        else:
+          ghostScore = 500
+        
+        if scaredTime > SAFE_DISTANCE_TO_GHOST:
+          ghostScore = 0
+        
+        nearestFood = 0
+        foodList = newFood.asList()
+        if foodList:
+          nearestFood = min([manhattanDistance(newPos, food) for food in foodList])
+
+        numberOfFoods = len(foodList)
+
+        score = - nearestFood - ghostScore - 50 * numberOfFoods
+
+        return score + currentGameState.getScore()
 
 def scoreEvaluationFunction(currentGameState):
     """
