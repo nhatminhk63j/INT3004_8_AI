@@ -314,15 +314,75 @@ class ExpectimaxAgent(MinimaxBase):
                              ghostFunction=self.expectiValue)
         return actions[0]
 
+dxs = (0, 0, 1, -1)
+dys = (-1, 1, 0, 0)
+
+
 def betterEvaluationFunction(currentGameState):
     """
       Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
       evaluation function (question 5).
-
       DESCRIPTION: <write something here so we know what you did>
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    dis = bfs((currentGameState))
+    foods = currentGameState.getFood().asList()
+    ghostStates = currentGameState.getGhostStates()
+    scaredTimes = [ghostState.scaredTimer for ghostState in ghostStates]
+    infinityScore = 10000000000
+    numberOfFoods = len(foods)
+    if not numberOfFoods:
+        return infinityScore * 1.0
+    nearestFood = min(dis[food] for food in foods)
+    nearestGhost = infinityScore
+    nearestScaredGhost = infinityScore
+    for (ghost, time) in zip(ghostStates, scaredTimes):
+        ghost_position = (int(ghost.getPosition()[0]), int(ghost.getPosition()[1]))
+        distanceToGhost = dis[ghost_position]
+        if time > 0:
+            nearestScaredGhost = min(distanceToGhost, nearestScaredGhost)
+        nearestGhost = min(distanceToGhost, nearestGhost)
+    if nearestScaredGhost == infinityScore:
+        nearestScaredGhost = 0
+    if nearestScaredGhost:
+        score = -nearestScaredGhost
+    elif nearestGhost < SAFE_DISTANCE_TO_GHOST:
+        score = -infinityScore
+    else:
+        score = - numberOfFoods * 100 - nearestFood * 50
+    return score + currentGameState.getScore() * 1000
+
+
+def out_of_bound(u, v, w, h):
+    return not (0 <= u and u < w and 0 <= v and v < h)
+
+
+def bfs(gameState):
+    queue = util.Queue()
+    pacmanPosition = gameState.getPacmanPosition()
+    dis = {}
+    dis[pacmanPosition] = 0
+    queue.push(pacmanPosition)
+
+    w = gameState.data.layout.width
+    h = gameState.data.layout.height
+
+    walls = gameState.getWalls().asList()
+
+    while not queue.isEmpty():
+        curVertex = queue.pop()
+        u, v = curVertex
+        for dx, dy in zip(dxs, dys):
+            x = u + dx
+            y = v + dy
+            if out_of_bound(x, y, w, h):
+                continue
+            if (x, y) in walls or (x, y) in dis:
+                continue
+            dis[(x, y)] = dis[(u, v)] + 1
+            queue.push((x, y))
+
+    return dis
+
 
 # Abbreviation
 better = betterEvaluationFunction
