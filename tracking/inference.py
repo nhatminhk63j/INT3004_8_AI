@@ -270,7 +270,14 @@ class ParticleFilter(InferenceModule):
         Storing your particles as a Counter (where there could be an associated
         weight with each position) is incorrect and may produce errors.
         """
-        "*** YOUR CODE HERE ***"
+        self.particles = list()
+        # list of all possible position a ghost can take
+        legalPositions = self.legalPositions
+        # setting particle possible positions
+        particlePositions = [self.legalPositions[i % len(
+            self.legalPositions)] for i in range(self.numParticles)]
+        self.particles = particlePositions
+        return self.particles
 
     def observe(self, observation, gameState):
         """
@@ -302,8 +309,24 @@ class ParticleFilter(InferenceModule):
         noisyDistance = observation
         emissionModel = busters.getObservationDistribution(noisyDistance)
         pacmanPosition = gameState.getPacmanPosition()
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        allPossible = util.Counter()
+        # if pacman ate the ghost then the particle position is jail position of the ghost
+        if noisyDistance == None:
+            self.particles = [self.getJailPosition()
+                              for i in range(self.numParticles)]
+        else:
+            # otherwise the belief is updated as per the trueDistance same as the exactInference class
+            beliefs = self.getBeliefDistribution()
+            for p in self.legalPositions:
+                trueDistance = util.manhattanDistance(p, pacmanPosition)
+                if emissionModel[trueDistance] > 0:
+                    allPossible[p] = emissionModel[trueDistance] * beliefs[p]
+
+            if allPossible.totalCount() == 0:
+                self.initializeUniformly(gameState)
+            else:
+                self.particles = [util.sample(allPossible)
+                                  for i in range(self.numParticles)]
 
     def elapseTime(self, gameState):
         """
@@ -329,8 +352,14 @@ class ParticleFilter(InferenceModule):
         essentially converts a list of particles into a belief distribution (a
         Counter object)
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #  counter for storing current belief distribution
+        beliefDistribution = util.Counter()
+        #  since the belief is that ghost are uniformally distributed accross legal positions
+        # setting the belief to 1.0, meaning the particle can be anywhere in the grid.
+        for particle in self.particles:
+            beliefDistribution[particle] += 1.0
+        beliefDistribution.normalize()
+        return beliefDistribution
 
 
 class MarginalInference(InferenceModule):
