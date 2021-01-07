@@ -83,8 +83,11 @@ def question3e():
 
 
 def question6():
-    answerEpsilon = None
-    answerLearningRate = None
+    answerEpsilon = 0.1
+    answerLearningRate = 0.8
+    # not possible because to find optimal path 99%, 50 episode is too small
+    # it needs more episode to clearly explore
+    return 'NOT POSSIBLE'
     return answerEpsilon, answerLearningRate
     # If not possible, return 'NOT POSSIBLE'
 
